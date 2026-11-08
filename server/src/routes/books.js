@@ -105,7 +105,7 @@ router.put('/books/:id', (req, res) => {
 
 router.delete('/books/:id', (req, res) => {
   getBook(req.params.id);
-  db.prepare('DELETE FROM loans WHERE book_id = ? AND returned_at IS NULL').run(req.params.id);
+  db.prepare('DELETE FROM loans WHERE book_id = ?').run(req.params.id);
   db.prepare('DELETE FROM books WHERE id = ?').run(req.params.id);
   res.json({ ok: true });
 });

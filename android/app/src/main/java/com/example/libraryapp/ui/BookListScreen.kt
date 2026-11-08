@@ -45,7 +45,7 @@ fun BookListScreen(
         Column(Modifier.padding(padding).fillMaxSize().padding(horizontal = 12.dp)) {
             if (message != null) {
                 Text(message, color = MaterialTheme.colorScheme.primary,
-                    Modifier.padding(vertical = 4.dp))
+                    modifier = Modifier.padding(vertical = 4.dp))
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {

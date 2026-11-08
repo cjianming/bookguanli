@@ -26,7 +26,15 @@ jobs:
       - name: Set up Gradle 8.7
         run: |
           set -x
-          curl -fL --retry 5 --retry-delay 5 -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-8.7-bin.zip
+          ok=0
+          for url in \
+            https://services.gradle.org/distributions/gradle-8.7-bin.zip \
+            https://mirrors.huaweicloud.com/gradle/gradle-8.7-bin.zip \
+            https://mirrors.cloud.tencent.com/gradle/gradle-8.7-bin.zip ; do
+            echo "trying $url"
+            curl -fL --retry 3 --retry-delay 5 -o /tmp/gradle.zip "$url" && ok=1 && break
+          done
+          [ "$ok" = "1" ] || { echo "all gradle mirrors failed"; exit 1; }
           ls -l /tmp/gradle.zip
           python3 -c "import zipfile; zipfile.ZipFile('/tmp/gradle.zip').extractall('/opt')"
           chmod +x /opt/gradle-8.7/bin/gradle

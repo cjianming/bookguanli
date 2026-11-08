@@ -25,8 +25,12 @@ jobs:
 
       - name: Set up Gradle 8.7
         run: |
-          curl -sSL -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-8.7-bin.zip
-          unzip -q /tmp/gradle.zip -d /opt
+          set -x
+          curl -fL --retry 5 --retry-delay 5 -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-8.7-bin.zip
+          ls -l /tmp/gradle.zip
+          python3 -c "import zipfile; zipfile.ZipFile('/tmp/gradle.zip').extractall('/opt')"
+          chmod +x /opt/gradle-8.7/bin/gradle
+          /opt/gradle-8.7/bin/gradle --version
           echo "/opt/gradle-8.7/bin" >> $GITHUB_PATH
 
       - name: Build debug APK

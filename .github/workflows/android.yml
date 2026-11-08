@@ -34,7 +34,11 @@ jobs:
           echo "/opt/gradle-8.7/bin" >> $GITHUB_PATH
 
       - name: Build debug APK
-        run: gradle -p android assembleDebug --no-daemon --stacktrace
+        run: |
+          pwd
+          ls -la
+          ls -la android || echo "NO android dir"
+          gradle -p android assembleDebug --no-daemon --stacktrace
 
       - name: Publish to release apk-latest
         env:

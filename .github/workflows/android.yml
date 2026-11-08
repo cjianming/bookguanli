@@ -20,16 +20,25 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Ensure SDK licenses accepted
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
 
       - name: Set up Gradle 8.7
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '8.7'
+        run: |
+          set -x
+          curl -fL --retry 5 --retry-delay 5 -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-8.7-bin.zip
+          ls -l /tmp/gradle.zip
+          python3 -c "import zipfile; zipfile.ZipFile('/tmp/gradle.zip').extractall('/opt')"
+          chmod +x /opt/gradle-8.7/bin/gradle
+          /opt/gradle-8.7/bin/gradle --version
+          echo "/opt/gradle-8.7/bin" >> $GITHUB_PATH
 
       - name: Build debug APK
-        run: gradle -p android assembleDebug --no-daemon --stacktrace
+        run: |
+          pwd
+          ls -la
+          ls -la android || echo "NO android dir"
+          gradle -p android assembleDebug --no-daemon --stacktrace
 
       - name: Publish to release apk-latest
         env:
@@ -40,5 +49,5 @@ jobs:
             android/app/build/outputs/apk/debug/app-debug.apk \
             --repo "$GITHUB_REPOSITORY" \
             --title "LibraryApp Debug APK" \
-            --notes "云端自动构建 $GITHUB_SHA" \
+            --notes "浜戠鑷姩鏋勫缓 $GITHUB_SHA" \
             --latest

@@ -1,0 +1,8 @@
+{
+  "string": [
+    { "name": "module_desc", "value": "图书馆管理系统模块" },
+    { "name": "ability_desc", "value": "图书馆管理" },
+    { "name": "EntryAbility_label", "value": "图书馆" },
+    { "name": "camera_reason", "value": "扫描书籍条形码或二维码以录入图书信息" }
+  ]
+}

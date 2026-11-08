@@ -1,0 +1,34 @@
+# 依赖与构建产物
+node_modules/
+oh_modules/
+
+# 服务端数据
+server/library.db*
+server/*.log
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+*.keystore
+!android/debug.keystore
+
+# HarmonyOS
+harmony/.hvigor/
+harmony/build/
+harmony/entry/build/
+harmony/.idea/
+harmony/local.properties
+**/oh-package-lock.json5
+
+# 本地编译缓存
+.jdk/
+.android-sdk/
+.gradle/
+
+# IDE
+.idea/
+.vscode/
+*.iml

@@ -1,0 +1,38 @@
+{
+  "module": {
+    "name": "entry",
+    "type": "entry",
+    "description": "$string:module_desc",
+    "deviceTypes": ["phone"],
+    "deliveryWithInstall": true,
+    "installationFree": false,
+    "pages": "$profile:main_pages",
+    "requestPermissions": [
+      { "name": "ohos.permission.INTERNET" },
+      {
+        "name": "ohos.permission.CAMERA",
+        "reason": "$string:camera_reason",
+        "usedScene": {
+          "abilities": ["EntryAbility"],
+          "when": "inuse"
+        }
+      }
+    ],
+    "abilities": [
+      {
+        "name": "EntryAbility",
+        "srcEntry": "./ets/entryability/EntryAbility.ets",
+        "description": "$string:ability_desc",
+        "icon": "$media:icon",
+        "label": "$string:EntryAbility_label",
+        "exported": true,
+        "skills": [
+          {
+            "entities": ["entity.system.home"],
+            "actions": ["action.system.home"]
+          }
+        ]
+      }
+    ]
+  }
+}

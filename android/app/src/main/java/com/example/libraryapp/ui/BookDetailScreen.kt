@@ -6,11 +6,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.foundation.background
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.libraryapp.data.ApiClient
 import com.example.libraryapp.data.Book
 import com.example.libraryapp.data.LoanRecord
 
@@ -42,11 +44,12 @@ fun BookDetailScreen(
         ) {
             Row {
                 AsyncImage(
-                    model = book.coverUrl,
+                    model = ApiClient.coverUrl(book.isbn),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(width = 110.dp, height = 150.dp)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .clip(RoundedCornerShape(8.dp))
                 )
                 Spacer(Modifier.width(16.dp))

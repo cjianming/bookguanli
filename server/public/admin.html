@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>图书馆管理系统 - 电脑端管理</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: #f0f2f5; color: #1f2329; }
+  header { background: #fff; border-bottom: 1px solid #e5e6eb; padding: 14px 28px;
+           display: flex; align-items: center; justify-content: space-between; }
+  header h1 { font-size: 20px; }
+  header .sub { font-size: 12px; color: #86909c; margin-top: 2px; }
+  main { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+  .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+  .card { background: #fff; border-radius: 10px; padding: 16px 20px; }
+  .card .num { font-size: 26px; font-weight: 700; }
+  .card .label { font-size: 13px; color: #86909c; margin-top: 4px; }
+  .toolbar { display: flex; gap: 10px; margin-bottom: 14px; }
+  .toolbar input[type=text] { flex: 1; padding: 9px 14px; border: 1px solid #e5e6eb;
+    border-radius: 8px; font-size: 14px; outline: none; }
+  .toolbar input[type=text]:focus { border-color: #4080ff; }
+  button { border: none; border-radius: 8px; padding: 9px 18px; font-size: 14px;
+    cursor: pointer; background: #4080ff; color: #fff; }
+  button:hover { background: #306bff; }
+  button:disabled { background: #a9c4ff; cursor: not-allowed; }
+  button.ghost { background: #f2f3f5; color: #4e5969; }
+  button.ghost:hover { background: #e5e6eb; }
+  button.danger { background: #f53f3f; }
+  button.danger:hover { background: #e13c3c; }
+  button.small { padding: 5px 12px; font-size: 13px; border-radius: 6px; }
+  .table-wrap { background: #fff; border-radius: 10px; overflow: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 860px; }
+  th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #f2f3f5; vertical-align: middle; }
+  th { color: #86909c; font-weight: 500; background: #fafbfc; white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f7f8fa; }
+  .cover { width: 44px; height: 60px; object-fit: cover; border-radius: 4px; background: #f2f3f5; }
+  .no-cover { width: 44px; height: 60px; border-radius: 4px; background: #f2f3f5;
+    display: flex; align-items: center; justify-content: center; color: #c9cdd4; font-size: 20px; }
+  .title-cell b { display: block; margin-bottom: 3px; }
+  .title-cell span { color: #86909c; font-size: 12px; }
+  .loc-input { width: 90px; padding: 5px 8px; border: 1px solid #e5e6eb; border-radius: 6px; font-size: 13px; }
+  .loc-input:focus { border-color: #4080ff; outline: none; }
+  .ops { display: flex; gap: 6px; flex-wrap: wrap; }
+  .empty { text-align: center; padding: 50px; color: #86909c; }
+  dialog { border: none; border-radius: 12px; padding: 0; width: 460px; max-width: 94vw; }
+  dialog::backdrop { background: rgba(0,0,0,.35); }
+  .dlg-body { padding: 22px 24px; }
+  .dlg-body h3 { margin-bottom: 16px; }
+  .dlg-body label { display: block; font-size: 13px; color: #4e5969; margin: 10px 0 4px; }
+  .dlg-body input, .dlg-body textarea { width: 100%; padding: 8px 12px; border: 1px solid #e5e6eb;
+    border-radius: 8px; font-size: 14px; outline: none; font-family: inherit; }
+  .dlg-body input:focus, .dlg-body textarea:focus { border-color: #4080ff; }
+  .dlg-foot { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+  .lookup-box { display: flex; gap: 8px; }
+  .lookup-box input { flex: 1; }
+  .meta { font-size: 12px; color: #86909c; margin-top: 4px; min-height: 16px; }
+  .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    background: #1f2329; color: #fff; padding: 10px 22px; border-radius: 8px;
+    font-size: 14px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 99; }
+  .toast.show { opacity: .92; }
+  .toast.err { background: #f53f3f; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>📚 图书馆管理系统</h1>
+    <div class="sub">电脑端管理界面 · 数据与手机端实时同步</div>
+  </div>
+  <button class="ghost" onclick="loadBooks()">刷新</button>
+</header>
+<main>
+  <div class="cards">
+    <div class="card"><div class="num" id="stTitles">-</div><div class="label">图书种数</div></div>
+    <div class="card"><div class="num" id="stCopies">-</div><div class="label">馆藏总数</div></div>
+    <div class="card"><div class="num" id="stAvail">-</div><div class="label">当前在馆</div></div>
+    <div class="card"><div class="num" id="stBorrowed">-</div><div class="label">借出未还</div></div>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="kw" placeholder="搜索书名 / 作者 / ISBN / 出版社" onkeydown="if(event.key==='Enter')loadBooks()">
+    <button onclick="loadBooks()">搜索</button>
+    <button onclick="openAdd()">＋ 添加图书</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>封面</th><th>图书信息</th><th>ISBN</th><th>在馆 / 馆藏</th>
+          <th>存储位置</th><th style="width:230px">操作</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty" id="empty" style="display:none">暂无图书，点右上角「添加图书」或用手机扫码加入</div>
+  </div>
+</main>
+
+<!-- 添加图书 -->
+<dialog id="dlgAdd">
+  <div class="dlg-body">
+    <h3>添加图书</h3>
+    <label>ISBN（扫码枪输入或手动填写，点「查询」自动联网获取信息）</label>
+    <div class="lookup-box">
+      <input type="text" id="addIsbn" placeholder="如 9787111213826">
+      <button class="ghost" onclick="lookup()">查询</button>
+    </div>
+    <div class="meta" id="addMeta"></div>
+    <label>书名 *</label><input type="text" id="addTitle">
+    <label>作者</label><input type="text" id="addAuthor">
+    <label>出版社</label><input type="text" id="addPublisher">
+    <label>馆藏数量</label><input type="number" id="addCopies" value="1" min="1">
+    <label>存储位置</label><input type="text" id="addLocation" placeholder="如 A区-3排-2层">
+    <label>简介</label><textarea id="addDesc" rows="3"></textarea>
+    <div class="dlg-foot">
+      <button class="ghost" onclick="closeDlg('dlgAdd')">取消</button>
+      <button onclick="addBook()">保存入库</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- 编辑图书 -->
+<dialog id="dlgEdit">
+  <div class="dlg-body">
+    <h3>编辑图书 <span class="meta" id="editIsbn"></span></h3>
+    <label>书名</label><input type="text" id="editTitle">
+    <label>作者</label><input type="text" id="editAuthor">
+    <label>出版社</label><input type="text" id="editPublisher">
+    <label>馆藏数量</label><input type="number" id="editCopies" min="1">
+    <label>存储位置</label><input type="text" id="editLocation">
+    <div class="dlg-foot">
+      <button class="ghost" onclick="closeDlg('dlgEdit')">取消</button>
+      <button onclick="saveEdit()">保存</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- 借出 -->
+<dialog id="dlgBorrow">
+  <div class="dlg-body">
+    <h3>借出图书</h3>
+    <div class="meta" id="borrowBook"></div>
+    <label>借阅人姓名 *</label><input type="text" id="borrower">
+    <div class="dlg-foot">
+      <button class="ghost" onclick="closeDlg('dlgBorrow')">取消</button>
+      <button onclick="doBorrow()">确定借出</button>
+    </div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let books = [];
+let editingId = null, borrowingId = null;
+
+const $ = (id) => document.getElementById(id);
+
+function toast(msg, isErr) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isErr ? ' err' : '');
+  setTimeout(() => t.className = 'toast', 2600);
+}
+
+async function api(path, opts) {
+  const res = await fetch(path, opts);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+  return data;
+}
+
+async function loadStats() {
+  try {
+    const s = await api('/api/stats');
+    $('stTitles').textContent = s.titles ?? 0;
+    $('stCopies').textContent = s.copies ?? 0;
+    $('stAvail').textContent = s.available ?? 0;
+    $('stBorrowed').textContent = s.borrowed ?? 0;
+  } catch (e) { toast('统计加载失败: ' + e.message, true); }
+}
+
+async function loadBooks() {
+  const kw = $('kw').value.trim();
+  try {
+    books = await api('/api/books' + (kw ? '?keyword=' + encodeURIComponent(kw) : ''));
+    render();
+    loadStats();
+  } catch (e) { toast('加载失败: ' + e.message, true); }
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+function render() {
+  const tb = $('tbody');
+  $('empty').style.display = books.length ? 'none' : 'block';
+  tb.innerHTML = books.map(b => `
+    <tr>
+      <td>${b.cover_url
+        ? `<img class="cover" src="${esc(b.cover_url)}" onerror="this.outerHTML='<div class=no-cover>书</div>'">`
+        : `<div class="no-cover">书</div>`}</td>
+      <td class="title-cell"><b>${esc(b.title)}</b>
+        <span>${esc(b.author || '-')}${b.publisher ? ' · ' + esc(b.publisher) : ''}${b.pubdate ? ' · ' + esc(b.pubdate) : ''}</span></td>
+      <td>${esc(b.isbn)}</td>
+      <td>${b.available} / ${b.copies}</td>
+      <td>
+        <input class="loc-input" id="loc-${b.id}" value="${esc(b.location)}" placeholder="未设置">
+        <button class="small ghost" onclick="saveLoc(${b.id})">存</button>
+      </td>
+      <td><div class="ops">
+        <button class="small" onclick="openBorrow(${b.id})" ${b.available > 0 ? '' : 'disabled'}>借出</button>
+        <button class="small ghost" onclick="doReturn(${b.id})" ${b.available < b.copies ? '' : 'disabled'}>归还</button>
+        <button class="small ghost" onclick="openEdit(${b.id})">编辑</button>
+        <button class="small danger" onclick="delBook(${b.id})">删除</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+async function saveLoc(id) {
+  const loc = $('loc-' + id).value.trim();
+  try {
+    await api('/api/books/' + id, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ location: loc })
+    });
+    toast('位置已保存');
+    loadBooks();
+  } catch (e) { toast('保存失败: ' + e.message, true); }
+}
+
+/* ---- 添加 ---- */
+function openAdd() {
+  ['addIsbn','addTitle','addAuthor','addPublisher','addLocation','addDesc'].forEach(i => $(i).value = '');
+  $('addCopies').value = 1;
+  $('addMeta').textContent = '';
+  $('dlgAdd').showModal();
+}
+
+let lookupCache = null;
+async function lookup() {
+  const isbn = $('addIsbn').value.replace(/[^0-9Xx]/g, '');
+  if (!isbn) { toast('请先填写 ISBN', true); return; }
+  $('addMeta').textContent = '查询中...';
+  try {
+    const info = await api('/api/lookup/' + encodeURIComponent(isbn));
+    lookupCache = info;
+    $('addTitle').value = info.title || '';
+    $('addAuthor').value = info.author || '';
+    $('addPublisher').value = info.publisher || '';
+    $('addDesc').value = info.description || '';
+    $('addMeta').textContent = '已获取互联网信息 ✓（可手动修正）';
+  } catch (e) {
+    $('addMeta').textContent = '互联网未查到，可手动填写后直接保存';
+  }
+}
+
+async function addBook() {
+  const title = $('addTitle').value.trim();
+  const isbn = $('addIsbn').value.replace(/[^0-9Xx]/g, '');
+  if (!isbn) { toast('ISBN 不能为空', true); return; }
+  if (!title) { toast('请填写书名（可先点「查询」自动填充）', true); return; }
+  try {
+    await api('/api/books', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        isbn,
+        title,
+        author: $('addAuthor').value.trim(),
+        publisher: $('addPublisher').value.trim(),
+        description: $('addDesc').value.trim(),
+        copies: parseInt($('addCopies').value, 10) || 1,
+        location: $('addLocation').value.trim()
+      })
+    });
+    closeDlg('dlgAdd');
+    toast('已入库');
+    loadBooks();
+  } catch (e) { toast('入库失败: ' + e.message, true); }
+}
+
+/* ---- 编辑 ---- */
+function openEdit(id) {
+  const b = books.find(x => x.id === id);
+  if (!b) return;
+  editingId = id;
+  $('editIsbn').textContent = 'ISBN ' + b.isbn;
+  $('editTitle').value = b.title || '';
+  $('editAuthor').value = b.author || '';
+  $('editPublisher').value = b.publisher || '';
+  $('editCopies').value = b.copies;
+  $('editLocation').value = b.location || '';
+  $('dlgEdit').showModal();
+}
+
+async function saveEdit() {
+  try {
+    await api('/api/books/' + editingId, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: $('editTitle').value.trim(),
+        author: $('editAuthor').value.trim(),
+        publisher: $('editPublisher').value.trim(),
+        copies: parseInt($('editCopies').value, 10) || 1,
+        location: $('editLocation').value.trim()
+      })
+    });
+    closeDlg('dlgEdit');
+    toast('已保存');
+    loadBooks();
+  } catch (e) { toast('保存失败: ' + e.message, true); }
+}
+
+/* ---- 借还 ---- */
+function openBorrow(id) {
+  const b = books.find(x => x.id === id);
+  borrowingId = id;
+  $('borrowBook').textContent = `《${b.title}》 在馆 ${b.available} 本`;
+  $('borrower').value = '';
+  $('dlgBorrow').showModal();
+}
+
+async function doBorrow() {
+  const name = $('borrower').value.trim();
+  if (!name) { toast('请填写借阅人', true); return; }
+  try {
+    await api(`/api/books/${borrowingId}/borrow`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ borrower: name })
+    });
+    closeDlg('dlgBorrow');
+    toast('已借出给 ' + name);
+    loadBooks();
+  } catch (e) { toast('借出失败: ' + e.message, true); }
+}
+
+async function doReturn(id) {
+  try {
+    await api(`/api/books/${id}/return`, { method: 'POST' });
+    toast('已归还');
+    loadBooks();
+  } catch (e) { toast('归还失败: ' + e.message, true); }
+}
+
+async function delBook(id) {
+  const b = books.find(x => x.id === id);
+  if (!confirm(`确定删除《${b.title}》？其借阅记录将一并删除。`)) return;
+  try {
+    await api('/api/books/' + id, { method: 'DELETE' });
+    toast('已删除');
+    loadBooks();
+  } catch (e) { toast('删除失败: ' + e.message, true); }
+}
+
+function closeDlg(id) { $(id).close(); }
+
+loadBooks();
+</script>
+</body>
+</html>

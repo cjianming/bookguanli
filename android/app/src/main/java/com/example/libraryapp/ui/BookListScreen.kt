@@ -82,6 +82,11 @@ fun BookListScreen(
                                     overflow = TextOverflow.Ellipsis,
                                     style = MaterialTheme.typography.bodySmall)
                                 Text("ISBN ${book.isbn}", style = MaterialTheme.typography.bodySmall)
+                                Text(
+                                    "位置：${book.location?.takeIf { it.isNotBlank() } ?: "未设置"}　·　馆藏 ${book.copies} 册",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.tertiary
+                                )
                             }
                             Spacer(Modifier.width(8.dp))
                             AssistChip(

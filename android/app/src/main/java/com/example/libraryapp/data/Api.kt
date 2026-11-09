@@ -71,6 +71,9 @@ object ApiClient {
     var baseUrl: String = "http://192.168.1.100:3000/"
         private set
 
+    /** 封面统一走服务端代理（绕过豆瓣防盗链），如 http://IP:3000/api/cover/9787... */
+    fun coverUrl(isbn: String): String = baseUrl + "api/cover/$isbn"
+
     @Volatile
     private var cached: LibraryApi? = null
 

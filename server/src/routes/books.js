@@ -86,7 +86,7 @@ router.get('/books/:id', (req, res) => {
   res.json(getBook(req.params.id));
 });
 
-// 修改馆藏数 / 存放位置等
+// 修改馆藏数 / 存放位置 / 书名作者出版社等
 router.put('/books/:id', (req, res) => {
   const book = getBook(req.params.id);
   const b = req.body || {};
@@ -96,10 +96,16 @@ router.put('/books/:id', (req, res) => {
   if (copies < borrowed) {
     return res.status(400).json({ error: `馆藏数不能小于当前借出数（${borrowed}）` });
   }
+  const title = b.title != null && String(b.title).trim() ? String(b.title).trim() : book.title;
+  const author = b.author != null ? String(b.author) : book.author;
+  const publisher = b.publisher != null ? String(b.publisher) : book.publisher;
+  const pubdate = b.pubdate != null ? String(b.pubdate) : book.pubdate;
+  const description = b.description != null ? String(b.description) : book.description;
   db.prepare(
     `UPDATE books SET copies = ?, available = ?, location = ?,
+     title = ?, author = ?, publisher = ?, pubdate = ?, description = ?,
      updated_at = datetime('now', 'localtime') WHERE id = ?`
-  ).run(copies, copies - borrowed, location, book.id);
+  ).run(copies, copies - borrowed, location, title, author, publisher, pubdate, description, book.id);
   res.json(getBook(book.id));
 });
 

@@ -126,6 +126,12 @@
 <dialog id="dlgEdit">
   <div class="dlg-body">
     <h3>编辑图书 <span class="meta" id="editIsbn"></span></h3>
+    <label>封面（JPG/PNG，不超过 5MB；有封面的书上传后自动覆盖）</label>
+    <div style="display:flex;gap:10px;align-items:center">
+      <img id="editCover" style="width:56px;height:78px;object-fit:cover;border-radius:4px;background:#f2f3f5">
+      <input type="file" id="coverFile" accept="image/jpeg,image/png" style="font-size:13px;flex:1">
+      <button class="ghost" onclick="uploadCover()">上传封面</button>
+    </div>
     <label>书名</label><input type="text" id="editTitle">
     <label>作者</label><input type="text" id="editAuthor">
     <label>出版社</label><input type="text" id="editPublisher">
@@ -155,7 +161,7 @@
 
 <script>
 let books = [];
-let editingId = null, borrowingId = null;
+let editingId = null, editingIsbn = null, borrowingId = null;
 
 const $ = (id) => document.getElementById(id);
 
@@ -287,13 +293,32 @@ function openEdit(id) {
   const b = books.find(x => x.id === id);
   if (!b) return;
   editingId = id;
+  editingIsbn = b.isbn;
   $('editIsbn').textContent = 'ISBN ' + b.isbn;
   $('editTitle').value = b.title || '';
   $('editAuthor').value = b.author || '';
   $('editPublisher').value = b.publisher || '';
   $('editCopies').value = b.copies;
   $('editLocation').value = b.location || '';
+  $('editCover').src = '/api/cover/' + b.isbn + '?t=' + Date.now();
+  $('editCover').onerror = function () { this.removeAttribute('src'); };
+  $('coverFile').value = '';
   $('dlgEdit').showModal();
+}
+
+async function uploadCover() {
+  const f = $('coverFile').files[0];
+  if (!f) { toast('请先选择图片文件', true); return; }
+  if (f.size > 5 * 1024 * 1024) { toast('图片超过 5MB', true); return; }
+  if (!/image\/(jpeg|png)/.test(f.type)) { toast('仅支持 JPG/PNG 图片', true); return; }
+  try {
+    await api(`/api/books/${editingId}/cover`, {
+      method: 'POST', headers: { 'Content-Type': f.type }, body: f
+    });
+    toast('封面上传成功');
+    $('editCover').src = '/api/cover/' + editingIsbn + '?t=' + Date.now();
+    loadBooks();
+  } catch (e) { toast('上传失败: ' + e.message, true); }
 }
 
 async function saveEdit() {

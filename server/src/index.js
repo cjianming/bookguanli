@@ -1,4 +1,5 @@
 const os = require('os');
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 
@@ -18,8 +19,19 @@ app.use((req, _res, next) => {
 
 app.use('/api', booksRouter);
 
+// PC 端管理界面
+app.use(express.static(path.join(__dirname, '..', 'public')));
+app.get('/admin', (_req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'admin.html'));
+});
+
 app.get('/', (_req, res) => {
-  res.json({ name: '图书馆管理系统服务', api: '/api', docs: '见 README.md' });
+  res.json({
+    name: '图书馆管理系统服务',
+    api: '/api',
+    admin: '/admin',
+    docs: '浏览器打开 /admin 进入电脑端管理界面',
+  });
 });
 
 // 统一错误处理

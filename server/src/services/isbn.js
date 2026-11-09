@@ -114,9 +114,14 @@ function parseDoubanInfo(html) {
     if (dateMatch) info.pubdate = dateMatch[1].trim();
   }
 
-  // 封面
+  // 封面：优先 og:image 大图，其次正文 <img>
+  const og = html.match(/<meta\s+property="og:image"\s+content="(https:\/\/img\d\.doubanio\.com[^"]+)"/);
   const cover = html.match(/<img[^>]+src="(https:\/\/img\d\.doubanio\.com\/view\/subject\/[^"]+)"/);
-  if (cover) info.cover_url = cover[1].replace('/s/', '/l/').replace(/sq[sx]_\d+_\d+/, '');
+  if (og) {
+    info.cover_url = og[1].replace('/sqxs/', '/l/').replace('/s/', '/l/');
+  } else if (cover) {
+    info.cover_url = cover[1].replace('/s/', '/l/').replace(/sq[sx]_\d+_\d+/, '');
+  }
 
   // 简介（取第一个 intro 区块内的段落）
   const intro = html.match(/<div[^>]+class="intro"[\s\S]*?<div[^>]+class="intro"([\s\S]*?)<\/div>/) ||

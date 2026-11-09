@@ -167,6 +167,32 @@ router.get('/books/:id/loans', (req, res) => {
   );
 });
 
+// 手动上传封面（PC 管理界面）：请求体为原始图片字节（image/jpeg 或 image/png）
+router.post('/books/:id/cover', (req, res) => {
+  const book = getBook(req.params.id);
+  const chunks = [];
+  let size = 0;
+  req.on('data', (c) => {
+    size += c.length;
+    if (size > 5 * 1024 * 1024) {
+      req.destroy();
+      return;
+    }
+    chunks.push(c);
+  });
+  req.on('end', () => {
+    const buf = Buffer.concat(chunks);
+    let ext = null;
+    if (buf.length > 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) ext = 'jpg';
+    else if (buf.length > 8 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e) ext = 'png';
+    if (!ext || buf.length < 100) {
+      return res.status(400).json({ error: '请上传有效的 JPG/PNG 图片（不超过 5MB）' });
+    }
+    coverService.saveCover(book.isbn, buf, ext);
+    res.json({ ok: true, cover: `/api/cover/${book.isbn}` });
+  });
+});
+
 // 统计
 router.get('/stats', (_req, res) => {
   const s = db

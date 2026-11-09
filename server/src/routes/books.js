@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db');
 const { normalizeIsbn, lookupBookInfo } = require('../services/isbn');
+const coverService = require('../services/covers');
 
 const router = express.Router();
 
@@ -176,6 +177,22 @@ router.get('/stats', (_req, res) => {
     .get();
   s.borrowed = (s.copies || 0) - (s.available || 0);
   res.json(s);
+});
+
+// 封面代理：客户端统一从这里取图（绕过豆瓣防盗链，带磁盘缓存）
+router.get('/cover/:isbn', async (req, res, next) => {
+  try {
+    const isbn = normalizeIsbn(req.params.isbn);
+    if (!isbn) return res.status(400).end();
+    const book = db.prepare('SELECT cover_url FROM books WHERE isbn = ?').get(isbn);
+    const result = await coverService.getCover(isbn, book ? book.cover_url : '');
+    if (!result) return res.status(404).end();
+    res.setHeader('Content-Type', result.ext === 'png' ? 'image/png' : 'image/jpeg');
+    res.setHeader('Cache-Control', 'public, max-age=604800');
+    res.sendFile(result.file);
+  } catch (e) {
+    next(e);
+  }
 });
 
 module.exports = router;

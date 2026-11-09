@@ -28,6 +28,7 @@ import retrofit2.HttpException
 
 // 简易 UI 状态机
 private sealed interface Screen {
+    data object Splash : Screen
     data object List : Screen
     data object Scanner : Screen
     data class Detail(val bookId: Long) : Screen
@@ -44,7 +45,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun LibraryApp() {
-    var screen by remember { mutableStateOf<Screen>(Screen.List) }
+    var screen by remember { mutableStateOf<Screen>(Screen.Splash) }
     var books by remember { mutableStateOf<List<Book>>(emptyList()) }
     var keyword by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
@@ -87,6 +88,14 @@ fun LibraryApp() {
     }
 
     when (val s = screen) {
+        Screen.Splash -> {
+            LaunchedEffect(Unit) {
+                kotlinx.coroutines.delay(1600)
+                screen = Screen.List
+            }
+            com.example.libraryapp.ui.SplashScreen()
+        }
+
         Screen.Scanner -> ScannerScreen(
             onDetected = { raw ->
                 // 扫到的内容可能是 ISBN，也可能是含 ISBN 的二维码文本，服务端会自动提取

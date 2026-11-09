@@ -201,9 +201,8 @@ function render() {
   $('empty').style.display = books.length ? 'none' : 'block';
   tb.innerHTML = books.map(b => `
     <tr>
-      <td>${b.cover_url
-        ? `<img class="cover" src="${esc(b.cover_url)}" onerror="this.outerHTML='<div class=no-cover>书</div>'">`
-        : `<div class="no-cover">书</div>`}</td>
+      <td><img class="cover" src="/api/cover/${esc(b.isbn)}"
+           onerror="this.outerHTML='<div class=no-cover>书</div>'"></td>
       <td class="title-cell"><b>${esc(b.title)}</b>
         <span>${esc(b.author || '-')}${b.publisher ? ' · ' + esc(b.publisher) : ''}${b.pubdate ? ' · ' + esc(b.pubdate) : ''}</span></td>
       <td>${esc(b.isbn)}</td>

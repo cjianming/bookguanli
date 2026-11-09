@@ -13,6 +13,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.libraryapp.data.ApiClient
 import com.example.libraryapp.data.Book
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,11 +68,12 @@ fun BookListScreen(
                     Card(onClick = { onBookClick(book) }) {
                         Row(Modifier.padding(10.dp)) {
                             AsyncImage(
-                                model = book.coverUrl,
+                                model = ApiClient.coverUrl(book.isbn),
                                 contentDescription = null,
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
                                     .size(width = 64.dp, height = 88.dp)
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
                                     .clip(RoundedCornerShape(6.dp))
                             )
                             Spacer(Modifier.width(12.dp))

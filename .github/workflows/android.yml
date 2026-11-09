@@ -5,6 +5,10 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+concurrency:
+  group: android-build
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -57,5 +61,5 @@ jobs:
             android/app/build/outputs/apk/debug/app-debug.apk \
             --repo "$GITHUB_REPOSITORY" \
             --title "LibraryApp Debug APK" \
-            --notes "浜戠鑷姩鏋勫缓 $GITHUB_SHA" \
+            --notes "云端自动构建 $GITHUB_SHA" \
             --latest

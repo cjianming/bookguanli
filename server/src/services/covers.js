@@ -98,4 +98,19 @@ async function getCover(isbn, remoteUrl) {
   return null;
 }
 
-module.exports = { getCover };
+/**
+ * 保存手动上传的封面（PC 管理界面上传）
+ * 覆盖同名缓存并清除另一扩展名的旧文件
+ */
+function saveCover(isbn, buf, ext) {
+  fs.mkdirSync(COVER_DIR, { recursive: true });
+  for (const e of ['jpg', 'png']) {
+    const f = cachePath(isbn, e);
+    if (e !== ext && fs.existsSync(f)) fs.unlinkSync(f);
+  }
+  const f = cachePath(isbn, ext);
+  fs.writeFileSync(f, buf);
+  return { file: f, ext };
+}
+
+module.exports = { getCover, saveCover };
